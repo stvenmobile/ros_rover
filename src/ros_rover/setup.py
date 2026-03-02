@@ -10,10 +10,12 @@ setup(
     packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
+            ['resource/' + package_name] if os.path.exists('resource/' + package_name) else []),
         ('share/' + package_name, ['package.xml']),
         # Include all launch files
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        # Include all URDF files
+        (os.path.join('share', package_name, 'urdf'), glob('urdf/*')),
         # Include all config files
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
