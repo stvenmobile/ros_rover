@@ -12,7 +12,7 @@
     <color rgba="1 1 1 1"/>
   </material>
 
-  <!-- Base Link (Coordinate Origin on the ground between the front wheels) -->
+  <!-- Base Link (Global Origin / Rotation Center) -->
   <link name="base_link"/>
 
   <!-- Chassis -->
@@ -23,7 +23,7 @@
         <box size="0.31 0.21 0.07"/>
       </geometry>
       <material name="blue"/>
-      <!-- The joint is at the bottom center of the box, so we shift visual up by half-height -->
+      <!-- The joint is at the bottom center of the box, shift visual up by half-height -->
       <origin xyz="0 0 0.035" rpy="0 0 0"/>
     </visual>
   </link>
@@ -31,9 +31,9 @@
   <joint name="base_link_to_chassis" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
-    <!-- Elevate chassis 1.5cm so the 1.5cm caster touches the ground.
-         Shift X back -0.08 so the drive wheels are at the front of the body. -->
-    <origin xyz="-0.08 0 0.015"/>
+    <!-- Elevate chassis 1.5cm off the ground to match the 1.5cm caster radius.
+         Centered on the base_link for better stability. -->
+    <origin xyz="0 0 0.015"/>
   </joint>
 
   <!-- Left Wheel (Front Left) -->
@@ -43,7 +43,7 @@
         <cylinder length="0.025" radius="0.0325"/>
       </geometry>
       <material name="black"/>
-      <!-- Rotate cylinder visual to lie flat on the Y-axis -->
+      <!-- Cylinder is Z-up by default. Rotate PI/2 (1.5708) around X to align with Y-axis -->
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
     </visual>
   </link>
@@ -51,9 +51,9 @@
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_wheel"/>
-    <!-- Axle is at Z=0.0325 (Wheel Radius) so it touches the ground.
-         Y=0.12 puts it outside the 21cm (0.21) chassis. -->
-    <origin xyz="0 0.12 0.0325" rpy="0 0 0"/>
+    <!-- X=0.10 (Front), Y=0.13 (Outside the 21cm chassis), Z=0.0325 (Radius height) 
+         Center of wheel is at 3.25cm, so bottom is at 0 (Ground Contact) -->
+    <origin xyz="0.10 0.13 0.0325" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
 
@@ -71,7 +71,7 @@
   <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="right_wheel"/>
-    <origin xyz="0 -0.12 0.0325" rpy="0 0 0"/>
+    <origin xyz="0.10 -0.13 0.0325" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
 
@@ -88,9 +88,9 @@
   <joint name="caster_joint" type="fixed">
     <parent link="chassis"/>
     <child link="caster_wheel"/>
-    <!-- Positioned at the rear of the 31cm chassis.
-         Because chassis is at Z=0.015, this 1.5cm sphere touches Z=0. -->
-    <origin xyz="-0.14 0 0" rpy="0 0 0"/>
+    <!-- Positioned at the rear of the chassis (X = -0.12). 
+         Since chassis is at Z=0.015, this 1.5cm sphere sits perfectly on Z=0. -->
+    <origin xyz="-0.12 0 0" rpy="0 0 0"/>
   </joint>
 
   <!-- Laser Frame (Lidar) -->
@@ -107,8 +107,8 @@
   <joint name="laser_joint" type="fixed">
     <parent link="chassis"/>
     <child link="laser_frame"/>
-    <!-- Mounted on top of the 7cm chassis -->
-    <origin xyz="0.05 0 0.07" rpy="0 0 0"/>
+    <!-- Mounted on top of the 7cm chassis, towards the front -->
+    <origin xyz="0.08 0 0.07" rpy="0 0 0"/>
   </joint>
 
 </robot>
