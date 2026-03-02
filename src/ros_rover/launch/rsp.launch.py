@@ -2,7 +2,6 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import TimerAction
 
 def generate_launch_description():
     package_name = 'ros_rover'
@@ -14,8 +13,7 @@ def generate_launch_description():
         robot_description_config = infp.read()
     
     # 1. Robot State Publisher
-    # This node takes the URDF and publishes it to the /robot_description topic
-    # It also handles the static transforms between robot links
+    # Frequency set to 30Hz for smoother transforms in RViz
     rsp_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -23,27 +21,23 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'robot_description': robot_description_config,
-            'use_sim_time': False
+            'use_sim_time': False,
+            'publish_frequency': 30.0
         }]
     )
 
     # 2. Joint State Publisher
-    # FIX: We pass the URDF directly as a parameter here.
-    # This prevents the node from hanging while waiting for a DDS discovery handshake.
-    jsp_node = TimerAction(
-        period=2.0,
-        actions=[
-            Node(
-                package='joint_state_publisher',
-                executable='joint_state_publisher',
-                name='joint_state_publisher',
-                output='screen',
-                parameters=[{
-                    'robot_description': robot_description_config,
-                    'use_sim_time': False
-                }]
-            )
-        ]
+    # Passing the URDF directly to the 'robot_description' parameter
+    # This is the most reliable way to bypass discovery hangs
+    jsp_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        name='joint_state_publisher',
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description_config,
+            'use_sim_time': False
+        }]
     )
     
     return LaunchDescription([
