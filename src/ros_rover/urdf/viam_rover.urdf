@@ -18,10 +18,12 @@
   <!-- Chassis -->
   <link name="chassis">
     <visual>
+      <!-- Size is 20cm long, 15cm wide, 7cm tall -->
       <geometry>
         <box size="0.2 0.15 0.07"/>
       </geometry>
       <material name="blue"/>
+      <!-- Offset visual by half-height so bottom of box is at Z=0 relative to the joint -->
       <origin xyz="0 0 0.035"/>
     </visual>
   </link>
@@ -29,7 +31,8 @@
   <joint name="base_link_to_chassis" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
-    <origin xyz="0 0 0"/>
+    <!-- Raise chassis 1.5cm off the ground for clearance -->
+    <origin xyz="0 0 0.015"/>
   </joint>
 
   <!-- Left Wheel -->
@@ -45,6 +48,7 @@
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_wheel"/>
+    <!-- Axis is at wheel radius height (0.0325) to touch the ground -->
     <origin xyz="0 0.08 0.0325" rpy="-1.5708 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
@@ -66,20 +70,23 @@
     <axis xyz="0 0 1"/>
   </joint>
 
-  <!-- Laser Frame (Placeholder for Lidar) -->
+  <!-- Laser Frame (Lidar) -->
   <link name="laser_frame">
     <visual>
       <geometry>
         <cylinder length="0.04" radius="0.035"/>
       </geometry>
       <material name="black"/>
+      <!-- Offset by half-height (0.02) so bottom sits on the joint -->
+      <origin xyz="0 0 0.02"/>
     </visual>
   </link>
 
   <joint name="laser_joint" type="fixed">
     <parent link="chassis"/>
     <child link="laser_frame"/>
-    <origin xyz="0.05 0 0.09" rpy="0 0 0"/>
+    <!-- Position at the very top of the 7cm chassis -->
+    <origin xyz="0.05 0 0.07" rpy="0 0 0"/>
   </joint>
 
 </robot>
