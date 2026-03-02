@@ -22,7 +22,7 @@
         <box size="0.2 0.15 0.07"/>
       </geometry>
       <material name="blue"/>
-      <!-- Center the box visual so the bottom is at Z=0 relative to its joint -->
+      <!-- Bottom of the 7cm box sits at Z=0 relative to the joint -->
       <origin xyz="0 0 0.035" rpy="0 0 0"/>
     </visual>
   </link>
@@ -30,30 +30,29 @@
   <joint name="base_link_to_chassis" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
-    <!-- Raise chassis 1.5cm off the ground for clearance -->
+    <!-- Raise chassis 1.5cm off the ground -->
     <origin xyz="0 0 0.015"/>
   </joint>
 
-  <!-- Left Wheel -->
+  <!-- Left Wheel (Front Left) -->
   <link name="left_wheel">
     <visual>
       <geometry>
         <cylinder length="0.025" radius="0.0325"/>
       </geometry>
       <material name="black"/>
-      <!-- URDF Cylinders are centered on their origin; no offset needed if joint is correct -->
     </visual>
   </link>
 
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_wheel"/>
-    <!-- Moved Y to 0.10 (10cm) so it clears the 15cm wide chassis -->
-    <origin xyz="0 0.10 0.0325" rpy="-1.5708 0 0"/>
+    <!-- X=0.08 (Front), Y=0.10 (Outside chassis), Z=Radius -->
+    <origin xyz="0.08 0.10 0.0325" rpy="-1.5708 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
-  <!-- Right Wheel -->
+  <!-- Right Wheel (Front Right) -->
   <link name="right_wheel">
     <visual>
       <geometry>
@@ -66,13 +65,12 @@
   <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="right_wheel"/>
-    <!-- Moved Y to -0.10 (10cm) -->
-    <origin xyz="0 -0.10 0.0325" rpy="1.5708 0 0"/>
+    <!-- X=0.08 (Front), Y=-0.10 (Outside chassis), Z=Radius -->
+    <origin xyz="0.08 -0.10 0.0325" rpy="1.5708 0 0"/>
     <axis xyz="0 0 1"/>
   </joint>
 
-  <!-- Caster Wheel (The White Piece) -->
-  <!-- This is a non-powered sliding wheel at the front for stability -->
+  <!-- Caster Wheel (Back) -->
   <link name="caster_wheel">
     <visual>
       <geometry>
@@ -85,9 +83,8 @@
   <joint name="caster_joint" type="fixed">
     <parent link="chassis"/>
     <child link="caster_wheel"/>
-    <!-- Place at the front (+0.08) and bottom (0.0) of the chassis -->
-    <!-- Since chassis is 1.5cm up, a 1.5cm sphere sits perfectly on the ground -->
-    <origin xyz="0.08 0 0" rpy="0 0 0"/>
+    <!-- X=-0.08 (Back), centered on Y, at the bottom of the chassis -->
+    <origin xyz="-0.08 0 0" rpy="0 0 0"/>
   </joint>
 
   <!-- Laser Frame (Lidar) -->
@@ -104,8 +101,8 @@
   <joint name="laser_joint" type="fixed">
     <parent link="chassis"/>
     <child link="laser_frame"/>
-    <!-- Sits exactly on top of the 7cm tall chassis -->
-    <origin xyz="0.05 0 0.07" rpy="0 0 0"/>
+    <!-- Positioned slightly back from the center -->
+    <origin xyz="-0.02 0 0.07" rpy="0 0 0"/>
   </joint>
 
 </robot>
