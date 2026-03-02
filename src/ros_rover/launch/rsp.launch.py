@@ -12,8 +12,8 @@ def generate_launch_description():
     with open(urdf_file_path, 'r') as infp:
         robot_description_config = infp.read()
     
-    # 1. Robot State Publisher
-    # Frequency set to 30Hz for smoother transforms in RViz
+    # Robot State Publisher
+    # This node turns the URDF + JointStates into 3D visuals
     rsp_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -26,21 +26,9 @@ def generate_launch_description():
         }]
     )
 
-    # 2. Joint State Publisher
-    # Passing the URDF directly to the 'robot_description' parameter
-    # This is the most reliable way to bypass discovery hangs
-    jsp_node = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        output='screen',
-        parameters=[{
-            'robot_description': robot_description_config,
-            'use_sim_time': False
-        }]
-    )
+    # NOTE: We have REMOVED joint_state_publisher from here.
+    # The physical robot (viam_driver.py) now provides these states.
     
     return LaunchDescription([
-        rsp_node,
-        jsp_node
+        rsp_node
     ])
