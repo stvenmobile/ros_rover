@@ -7,7 +7,7 @@ def generate_launch_description():
         # Hardware Bridge Node
         Node(
             package='ros_rover',
-            executable='viam_driver.py',
+            executable='viam_driver',
             name='viam_hardware_bridge',
             output='screen',
         ),
