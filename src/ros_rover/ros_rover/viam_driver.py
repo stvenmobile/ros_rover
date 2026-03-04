@@ -23,8 +23,8 @@ R_IN4 = 24  # Direction 2
 R_ENC = 26  # Encoder Input (Pulses)
 
 # Physical Constants for VIAM Rover 1
-WHEEL_RADIUS = 0.0325      # 65mm diameter
-WHEEL_SEPARATION = 0.160   # Distance between wheel centers
+WHEEL_RADIUS = 0.035       # 70mm diameter
+WHEEL_SEPARATION = 0.230   # Distance between wheel centres (measured)
 TICKS_PER_REV = 40         # Encoder resolution (adjust if needed)
 PWM_FREQ = 1000            # 1kHz for smooth motor operation
 
@@ -54,6 +54,8 @@ class ViamHardwareBridge(Node):
         self.right_ticks = 0
         self.prev_left_ticks = 0
         self.prev_right_ticks = 0
+        self.left_dir = 1   # +1 = forward, -1 = reverse
+        self.right_dir = 1
         
         # Odometry State
         self.x = 0.0
@@ -79,10 +81,10 @@ class ViamHardwareBridge(Node):
         self.timer = self.create_timer(0.05, self.update_loop)
 
     def _l_enc_cb(self, chip, gpio, level, tick):
-        self.left_ticks += 1
+        self.left_ticks += self.left_dir
 
     def _r_enc_cb(self, chip, gpio, level, tick):
-        self.right_ticks += 1
+        self.right_ticks += self.right_dir
 
     def cmd_vel_cb(self, msg):
         """Processes Twist messages and drives motors"""
@@ -93,6 +95,9 @@ class ViamHardwareBridge(Node):
         # Differential Drive Kinematics
         left_v = v - (w * WHEEL_SEPARATION / 2.0)
         right_v = v + (w * WHEEL_SEPARATION / 2.0)
+
+        self.left_dir = 1 if left_v >= 0 else -1
+        self.right_dir = 1 if right_v >= 0 else -1
 
         self._set_motor(left_v, L_ENA, L_IN1, L_IN2)
         self._set_motor(right_v, R_ENB, R_IN3, R_IN4)
@@ -147,7 +152,6 @@ class ViamHardwareBridge(Node):
         js = JointState()
         js.header.stamp = now.to_msg()
         js.name = ['left_wheel_joint', 'right_wheel_joint']
-        # Position in Radians
         l_rad = (self.left_ticks / TICKS_PER_REV) * 2 * math.pi
         r_rad = (self.right_ticks / TICKS_PER_REV) * 2 * math.pi
         js.position = [l_rad, r_rad]

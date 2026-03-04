@@ -11,6 +11,9 @@
   <material name="white">
     <color rgba="1 1 1 1"/>
   </material>
+  <material name="gray">
+    <color rgba="0.5 0.5 0.5 1"/>
+  </material>
 
   <!-- Base Link (Global Origin / Ground Level Center) -->
   <link name="base_link"/>
@@ -23,7 +26,6 @@
         <box size="0.31 0.21 0.07"/>
       </geometry>
       <material name="blue"/>
-      <!-- Visual origin is 0,0,0 relative to the centered joint -->
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </visual>
   </link>
@@ -31,50 +33,50 @@
   <joint name="base_link_to_chassis" type="fixed">
     <parent link="base_link"/>
     <child link="chassis"/>
-    <!-- Center of the 7cm box is at Z = 1.5cm (clearance) + 3.5cm (half-height) = 5cm -->
-    <origin xyz="0 0 0.05"/>
+    <!-- Chassis centre at Z = 1.5cm (clearance) + 3.5cm (half-height) = 5cm -->
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
   </joint>
 
-  <!-- Front Left Wheel -->
-  <link name="front_left_wheel">
+  <!-- Left Wheel (front, driven) -->
+  <link name="left_wheel">
     <visual>
       <geometry>
-        <cylinder length="0.025" radius="0.0325"/>
+        <cylinder length="0.025" radius="0.035"/>
       </geometry>
       <material name="black"/>
-      <!-- Rotate cylinder to sit on its side along the Y axis -->
+      <!-- Rotate cylinder to roll along Y axis -->
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
     </visual>
   </link>
 
-  <joint name="front_left_wheel_joint" type="continuous">
+  <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
-    <child link="front_left_wheel"/>
-    <!-- Forward 12cm, Left 13cm, Axle at 3.25cm (so bottom touches Z=0) -->
-    <origin xyz="0.12 0.13 0.0325" rpy="0 0 0"/>
+    <child link="left_wheel"/>
+    <!-- Forward 12cm, Left 11.5cm (WHEEL_SEPARATION/2 = 0.23/2), axle at 3.5cm -->
+    <origin xyz="0.12 0.115 0.035" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
 
-  <!-- Front Right Wheel -->
-  <link name="front_right_wheel">
+  <!-- Right Wheel (front, driven) -->
+  <link name="right_wheel">
     <visual>
       <geometry>
-        <cylinder length="0.025" radius="0.0325"/>
+        <cylinder length="0.025" radius="0.035"/>
       </geometry>
       <material name="black"/>
       <origin xyz="0 0 0" rpy="1.5708 0 0"/>
     </visual>
   </link>
 
-  <joint name="front_right_wheel_joint" type="continuous">
+  <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
-    <child link="front_right_wheel"/>
-    <!-- Forward 12cm, Right 13cm, Axle at 3.25cm -->
-    <origin xyz="0.12 -0.13 0.0325" rpy="0 0 0"/>
+    <child link="right_wheel"/>
+    <!-- Forward 12cm, Right 11.5cm, axle at 3.5cm -->
+    <origin xyz="0.12 -0.115 0.035" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
 
-  <!-- Rear Caster Wheel -->
+  <!-- Rear Caster (ball, passive) -->
   <link name="rear_caster">
     <visual>
       <geometry>
@@ -87,8 +89,26 @@
   <joint name="rear_caster_joint" type="fixed">
     <parent link="base_link"/>
     <child link="rear_caster"/>
-    <!-- Back 12cm, Centered, Height 1.5cm (so bottom touches Z=0) -->
+    <!-- Back 12cm, centred, ball centre at 1.5cm (bottom touches Z=0) -->
     <origin xyz="-0.12 0 0.015" rpy="0 0 0"/>
+  </joint>
+
+  <!-- IMU Link (ICM20948) - mounted centre-top of chassis -->
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.02 0.02 0.004"/>
+      </geometry>
+      <material name="gray"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </visual>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="imu_link"/>
+    <!-- Sits on top surface of chassis (3.5cm above chassis centre) -->
+    <origin xyz="0 0 0.035" rpy="0 0 0"/>
   </joint>
 
   <!-- Laser Frame (Lidar) -->
@@ -98,7 +118,7 @@
         <cylinder length="0.04" radius="0.035"/>
       </geometry>
       <material name="black"/>
-      <!-- Bottom of sensor sits on joint -->
+      <!-- Offset visual so base of cylinder sits on the joint -->
       <origin xyz="0 0 0.02" rpy="0 0 0"/>
     </visual>
   </link>
@@ -106,7 +126,7 @@
   <joint name="laser_joint" type="fixed">
     <parent link="chassis"/>
     <child link="laser_frame"/>
-    <!-- Mounted on top of the chassis (3.5cm above chassis center) -->
+    <!-- 8cm forward, on top surface of chassis -->
     <origin xyz="0.08 0 0.035" rpy="0 0 0"/>
   </joint>
 
