@@ -25,7 +25,7 @@ R_ENC = 26  # Encoder Input (Pulses)
 # Physical Constants for VIAM Rover 1
 WHEEL_RADIUS = 0.035       # 70mm diameter
 WHEEL_SEPARATION = 0.230   # Distance between wheel centres (measured)
-TICKS_PER_REV = 40         # Encoder resolution (adjust if needed)
+TICKS_PER_REV = 2000       # Encoder resolution (measured)
 PWM_FREQ = 1000            # 1kHz for smooth motor operation
 
 class ViamHardwareBridge(Node):
