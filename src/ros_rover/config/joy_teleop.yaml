@@ -21,7 +21,7 @@ teleop_twist_joy_node:
       y: 1.0
 
     scale_angular:
-      yaw: 2.0                    # Normal rotation speed (rad/s)
+      yaw: 4.0                    # Normal rotation speed (rad/s)
 
     scale_angular_turbo:
-      yaw: 3.0
+      yaw: 6.0
