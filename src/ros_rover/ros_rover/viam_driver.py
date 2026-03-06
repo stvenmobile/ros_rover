@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist, TransformStamped
+from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import JointState
-from tf2_ros import TransformBroadcaster
 import lgpio
 import math
 import time
@@ -31,7 +30,7 @@ PWM_FREQ = 1000            # 1kHz for smooth motor operation
 class ViamHardwareBridge(Node):
     def __init__(self):
         super().__init__('viam_hardware_bridge')
-        self.get_logger().info("VIAM Bridge Active: Broadcasting Odom & JointStates")
+        self.get_logger().info("VIAM Bridge Active: Publishing Odom & JointStates")
 
         # Initialize lgpio
         try:
@@ -72,10 +71,10 @@ class ViamHardwareBridge(Node):
         lgpio.callback(self.h, R_ENC, lgpio.BOTH_EDGES, self._r_enc_cb)
 
         # Publishers & Subscribers
+        # NOTE: odom->base_link TF is published by the EKF node, not here.
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10)
         self.joint_pub = self.create_publisher(JointState, 'joint_states', 10)
         self.sub = self.create_subscription(Twist, 'cmd_vel', self.cmd_vel_cb, 10)
-        self.tf_broadcaster = TransformBroadcaster(self)
 
         # 20Hz Control/Odometry Loop (50ms)
         self.timer = self.create_timer(0.05, self.update_loop)
@@ -157,16 +156,34 @@ class ViamHardwareBridge(Node):
         js.position = [l_rad, r_rad]
         self.joint_pub.publish(js)
 
-        # 2. Publish Odometry and TF Transform
-        t = TransformStamped()
-        t.header.stamp = now.to_msg()
-        t.header.frame_id = 'odom'
-        t.child_frame_id = 'base_link'
-        t.transform.translation.x = self.x
-        t.transform.translation.y = self.y
-        t.transform.rotation.z = math.sin(self.th / 2.0)
-        t.transform.rotation.w = math.cos(self.th / 2.0)
-        self.tf_broadcaster.sendTransform(t)
+        # 2. Publish Odometry message (EKF subscribes to this)
+        vx   = d   / dt   # forward linear velocity  (m/s)
+        vyaw = dth / dt   # yaw rate                 (rad/s)
+
+        odom = Odometry()
+        odom.header.stamp    = now.to_msg()
+        odom.header.frame_id = 'odom'
+        odom.child_frame_id  = 'base_link'
+
+        odom.pose.pose.position.x    = self.x
+        odom.pose.pose.position.y    = self.y
+        odom.pose.pose.orientation.z = math.sin(self.th / 2.0)
+        odom.pose.pose.orientation.w = math.cos(self.th / 2.0)
+
+        odom.twist.twist.linear.x  = vx
+        odom.twist.twist.angular.z = vyaw
+
+        # Pose covariance (6x6 row-major, diagonal terms)
+        # Higher yaw variance — EKF will use IMU gyro to correct heading
+        odom.pose.covariance[0]  = 0.010   # x  (m²)
+        odom.pose.covariance[7]  = 0.010   # y  (m²)
+        odom.pose.covariance[35] = 0.100   # yaw (rad²)
+
+        # Twist covariance
+        odom.twist.covariance[0]  = 0.005  # vx   (m/s)²
+        odom.twist.covariance[35] = 0.010  # vyaw (rad/s)²
+
+        self.odom_pub.publish(odom)
 
         self.last_time = now
 

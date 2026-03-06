@@ -8,6 +8,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg = get_package_share_directory('ros_rover')
+    ekf_params = os.path.join(pkg, 'config', 'ekf.yaml')
 
     # Robot State Publisher (URDF -> TF tree)
     rsp = IncludeLaunchDescription(
@@ -32,6 +33,15 @@ def generate_launch_description():
         output='screen',
     )
 
+    # EKF: fuses /odom + /imu/data -> /odometry/filtered + odom->base_link TF
+    ekf = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_node',
+        output='screen',
+        parameters=[ekf_params],
+    )
+
     # NOTE: laser_frame TF is defined in the URDF (chassis -> laser_frame).
     # Do NOT add a separate static_transform_publisher for laser_frame here,
     # as that would create a conflicting duplicate in the TF tree.
@@ -40,4 +50,5 @@ def generate_launch_description():
         rsp,
         viam_driver,
         icm20948,
+        ekf,
     ])

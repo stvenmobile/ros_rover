@@ -1,0 +1,55 @@
+### robot_localization EKF — VIAM Rover 1
+###
+### Fuses:
+###   /odom      — wheel encoder odometry  (viam_driver)
+###   /imu/data  — ICM20948 gyro + accel   (icm20948_driver)
+###
+### Output:
+###   /odometry/filtered  — fused odometry
+###   TF: odom -> base_link  (replaces the direct TF from viam_driver)
+
+ekf_node:
+  ros__parameters:
+
+    frequency: 30.0         # EKF output rate (Hz)
+    sensor_timeout: 0.1     # seconds before a sensor is considered stale
+    two_d_mode: true        # constrain to XY plane — ground robot
+    publish_tf: true        # EKF owns the odom -> base_link transform
+    publish_acceleration: false
+
+    odom_frame:      odom
+    base_link_frame: base_link
+    world_frame:     odom   # no map frame yet; SLAM will add that later
+
+    # ------------------------------------------------------------------
+    # Source 0: Wheel odometry  (/odom)
+    # State indices: x  y  z  r  p  Y  vx vy vz vr vp vY ax ay az
+    # ------------------------------------------------------------------
+    odom0: /odom
+    odom0_config: [true,  true,  false,
+                   false, false, true,
+                   true,  false, false,
+                   false, false, false,
+                   false, false, false]
+    # x, y, yaw (pose) + vx (twist) from encoders.
+    # vyaw deliberately excluded here — IMU gyro is more accurate.
+    odom0_differential: false
+    odom0_relative:     false
+    odom0_queue_size:   10
+
+    # ------------------------------------------------------------------
+    # Source 1: ICM20948 IMU  (/imu/data)
+    # Orientation not provided (covariance[0]=-1 in driver).
+    # Using: angular_velocity.z (gyro) + linear_acceleration.x/y
+    # ------------------------------------------------------------------
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  true,  true,  false]
+    # gyro Z corrects heading drift; accel X/Y refines linear velocity.
+    imu0_differential: false
+    imu0_relative:     false
+    imu0_queue_size:   10
+    imu0_remove_gravitational_acceleration: true
