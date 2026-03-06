@@ -65,6 +65,23 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('use_joystick')),
     )
 
+    # RPLIDAR A1: publishes /scan — frame_id must match URDF (laser_frame)
+    # Disable with: ros2 launch ros_rover rover_bringup.launch.py use_lidar:=false
+    lidar = Node(
+        package='rplidar_ros',
+        executable='rplidar_composition',
+        name='rplidar_node',
+        output='screen',
+        parameters=[{
+            'serial_port':     '/dev/ttyUSB0',
+            'serial_baudrate': 115200,
+            'frame_id':        'laser_frame',
+            'angle_compensate': True,
+            'scan_mode':       'Standard',
+        }],
+        condition=IfCondition(LaunchConfiguration('use_lidar')),
+    )
+
     # NOTE: laser_frame TF is defined in the URDF (chassis -> laser_frame).
     # Do NOT add a separate static_transform_publisher for laser_frame here,
     # as that would create a conflicting duplicate in the TF tree.
@@ -75,10 +92,16 @@ def generate_launch_description():
             default_value='true',
             description='Launch joystick nodes (set false if controller not connected)',
         ),
+        DeclareLaunchArgument(
+            'use_lidar',
+            default_value='true',
+            description='Launch RPLIDAR A1 node (set false if lidar not connected)',
+        ),
         rsp,
         viam_driver,
         icm20948,
         ekf,
         joy_node,
         teleop_joy,
+        lidar,
     ])
