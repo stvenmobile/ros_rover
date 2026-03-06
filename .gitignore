@@ -36,3 +36,7 @@ Thumbs.db
 
 *.log
 *.bag
+venv/
+build/
+install/
+log/

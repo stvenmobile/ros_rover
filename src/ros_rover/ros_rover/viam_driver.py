@@ -32,9 +32,9 @@ class ViamHardwareBridge(Node):
 
         # PID gains — tunable at runtime:
         #   ros2 param set /viam_hardware_bridge pid_kp 2.0
-        self.declare_parameter('pid_kp', 1.5)
-        self.declare_parameter('pid_ki', 0.8)
-        self.declare_parameter('pid_kd', 0.02)
+        self.declare_parameter('pid_kp', 1.8)
+        self.declare_parameter('pid_ki', 1.0)
+        self.declare_parameter('pid_kd', 0.1)
 
         try:
             self.h = lgpio.gpiochip_open(0)
