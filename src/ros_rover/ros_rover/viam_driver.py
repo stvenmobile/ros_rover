@@ -39,11 +39,20 @@ class ViamHardwareBridge(Node):
             self.get_logger().error(f"GPIO Error: {e}")
             return
 
+        # Free any pins left claimed by a previous (crashed) process,
+        # then claim them fresh.  gpio_free() is a no-op if not claimed.
+        all_pins = [L_ENA, L_IN1, L_IN2, R_ENB, R_IN3, R_IN4, L_ENC, R_ENC]
+        for pin in all_pins:
+            try:
+                lgpio.gpio_free(self.h, pin)
+            except Exception:
+                pass
+
         # Setup Motor Control Pins
         for pin in [L_ENA, L_IN1, L_IN2, R_ENB, R_IN3, R_IN4]:
             lgpio.gpio_claim_output(self.h, pin)
             lgpio.gpio_write(self.h, pin, 0)
-        
+
         # Setup Encoder Pins
         lgpio.gpio_claim_input(self.h, L_ENC)
         lgpio.gpio_claim_input(self.h, R_ENC)
@@ -186,6 +195,16 @@ class ViamHardwareBridge(Node):
         self.odom_pub.publish(odom)
 
         self.last_time = now
+
+    def destroy_node(self):
+        try:
+            self._set_motor(0, L_ENA, L_IN1, L_IN2)
+            self._set_motor(0, R_ENB, R_IN3, R_IN4)
+            lgpio.gpiochip_close(self.h)
+        except Exception:
+            pass
+        super().destroy_node()
+
 
 def main():
     rclpy.init()

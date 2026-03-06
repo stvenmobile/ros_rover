@@ -18,6 +18,7 @@ Unit conversions applied:
     Magnetometer  : microtesla -> tesla (multiply by 1e-6)
 """
 import math
+import time
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Imu, MagneticField
@@ -48,12 +49,23 @@ class ICM20948Driver(Node):
             )
             return
 
-        try:
-            self.imu = ICM20948()
-            self.get_logger().info("ICM20948 initialised at I2C bus 1, address 0x68")
-        except Exception as e:
-            self.get_logger().fatal(f"ICM20948 init failed: {e}  — check wiring/I2C")
-            return
+        # The AK09916 magnetometer sub-chip can take a moment to come online.
+        # Retry up to 3 times with a short delay before giving up.
+        self.imu = None
+        for attempt in range(1, 4):
+            try:
+                self.imu = ICM20948()
+                self.get_logger().info("ICM20948 initialised at I2C bus 1, address 0x68")
+                break
+            except Exception as e:
+                if attempt < 3:
+                    self.get_logger().warn(
+                        f"ICM20948 init attempt {attempt}/3 failed ({e}) — retrying...")
+                    time.sleep(2.0)
+                else:
+                    self.get_logger().fatal(
+                        f"ICM20948 init failed after 3 attempts: {e} — check wiring/I2C")
+                    return
 
         self.imu_pub = self.create_publisher(Imu, 'imu/data', 10)
         self.mag_pub = self.create_publisher(MagneticField, 'imu/mag', 10)
