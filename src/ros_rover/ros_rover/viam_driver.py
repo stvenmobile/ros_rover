@@ -194,20 +194,32 @@ class ViamHardwareBridge(Node):
         actual_right = d_right / dt
 
         # --- PID: compute PWM outputs ---
-        left_pwm,  self.left_integral,  self.left_prev_err  = self._compute_pid(
-            self.left_target,  actual_left,  dt,
-            self.left_integral,  self.left_prev_err)
+        # Bypass PID when target is zero — hard-stop prevents encoder noise feedback loop
+        if abs(self.left_target) < 0.01:
+            self._set_motor(0, L_ENA, L_IN1, L_IN2)
+            self.left_integral = 0.0
+            self.left_prev_err = 0.0
+            left_pwm = 0.0
+        else:
+            left_pwm, self.left_integral, self.left_prev_err = self._compute_pid(
+                self.left_target, actual_left, dt,
+                self.left_integral, self.left_prev_err)
+            self._set_motor(left_pwm, L_ENA, L_IN1, L_IN2)
 
-        right_pwm, self.right_integral, self.right_prev_err = self._compute_pid(
-            self.right_target, actual_right, dt,
-            self.right_integral, self.right_prev_err)
+        if abs(self.right_target) < 0.01:
+            self._set_motor(0, R_ENB, R_IN3, R_IN4)
+            self.right_integral = 0.0
+            self.right_prev_err = 0.0
+            right_pwm = 0.0
+        else:
+            right_pwm, self.right_integral, self.right_prev_err = self._compute_pid(
+                self.right_target, actual_right, dt,
+                self.right_integral, self.right_prev_err)
+            self._set_motor(right_pwm, R_ENB, R_IN3, R_IN4)
 
         # Update encoder direction from actual motor command
         self.left_dir  = 1 if left_pwm  >= 0 else -1
         self.right_dir = 1 if right_pwm >= 0 else -1
-
-        self._set_motor(left_pwm,  L_ENA, L_IN1, L_IN2)
-        self._set_motor(right_pwm, R_ENB, R_IN3, R_IN4)
 
         # --- Odometry integration ---
         d   = (d_left + d_right) / 2.0
