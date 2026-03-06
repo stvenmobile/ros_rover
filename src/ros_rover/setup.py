@@ -28,7 +28,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'viam_driver = ros_rover.viam_driver:main'
+            'viam_driver = ros_rover.viam_driver:main',
+            'icm20948_driver = ros_rover.icm20948_driver:main',
         ],
     },
 )

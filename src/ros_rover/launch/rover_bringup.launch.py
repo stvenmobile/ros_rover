@@ -24,6 +24,14 @@ def generate_launch_description():
         output='screen',
     )
 
+    # IMU: ICM20948 9-DOF, publishes /imu/data and /imu/mag
+    icm20948 = Node(
+        package='ros_rover',
+        executable='icm20948_driver',
+        name='icm20948_driver',
+        output='screen',
+    )
+
     # NOTE: laser_frame TF is defined in the URDF (chassis -> laser_frame).
     # Do NOT add a separate static_transform_publisher for laser_frame here,
     # as that would create a conflicting duplicate in the TF tree.
@@ -31,4 +39,5 @@ def generate_launch_description():
     return LaunchDescription([
         rsp,
         viam_driver,
+        icm20948,
     ])
